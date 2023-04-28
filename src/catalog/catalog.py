@@ -12,24 +12,7 @@ disk_lock = threading.Lock()  # lock for disk database
 
 # notify front end server which stock be updated
 def update_cache(stock_name):
-    requests.get('http://0.0.0.0:xxxx/rmcache?stock_name=%s'%stock_name) # port tbd
-
-# check quantity
-def check_quantity():
-    while True:
-        with lock:
-            flag=False
-            for item in catalog:
-                # if out of stock, restock
-                if item['quantity']==0:
-                    item['quantity']=100
-                    # notify frontend
-                    update_cache(item['stock_name'])
-                    flag=True
-            if flag:
-                write()
-        sleep(10)
-    
+    requests.get('http://0.0.0.0:xxxx/rm?stock_name=%s'%stock_name) # port tbd
 
 # initial database
 def init_database():
@@ -104,12 +87,12 @@ def buy():
                 else:
                     js = json.dumps({'message': 'out of stock'})
                     return js, 404
-        js = json.dumps({'message': 'product not found'})
+        js = json.dumps({'message': 'stock not found'})
         return js, 404
 
 if __name__ == '__main__':
     port=10086
     init_database()
     print(catalog)
-    threading.Thread(target=check_quantity).start()
+    
     app.run(host='0.0.0.0', port=port, debug=True, threaded=True)
