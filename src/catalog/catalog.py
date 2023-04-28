@@ -4,15 +4,10 @@ from time import sleep
 from flask import Flask, request
 import requests
 
-app = Flask(__name__)
-catalog = []  # memory stored from the disk
-lock = threading.Lock()  # lock for memory database
-disk_lock = threading.Lock()  # lock for disk database
-
-
-# notify front end server which stock be updated
-def update_cache(stock_name):
-    requests.get('http://0.0.0.0:xxxx/rm?stock_name=%s'%stock_name) # port tbd
+catalog_server = Flask(__name__)
+catalog = []  # catalog db
+lock = threading.Lock()  # lock for dic db
+disk_lock = threading.Lock()  # lock for disk db
 
 # initial database
 def init_database():
@@ -20,12 +15,12 @@ def init_database():
         lines = f.readlines()
         for line in lines:
             line = line.strip('\n')
-            info = line.split(' ')
+            s = line.split(' ')
             item = {
-                'stock_name': info[0],
-                'price': float(info[1]),
-                'trade_volume':int(info[2]),
-                'quantity': int(info[2])
+                'stock_name': s[0],
+                'price': float(s[1]),
+                'trade_volume':int(s[2]),
+                'quantity': int(s[3])
             }
             catalog.append(item)
     f.close()
@@ -35,7 +30,7 @@ def write():
     global catalog
     data = ''
     for item in catalog:
-        data += '%s %s %s %s\n' % (item['name'], item['price'],item['trade_volume'],item['quantity'])
+        data = '%s %s %s %s\n' % (item['name'], item['price'],item['trade_volume'],item['quantity'])
     # lock file in disk
     with disk_lock:
         f = open('catalog.txt', 'w')
@@ -44,7 +39,7 @@ def write():
 
 
 # query stock info
-@app.route('/query', methods=['GET'])
+@catalog_server.route('/query', methods=['GET'])
 def products():
     global catalog
     stock_name = request.args.get('stock_name')
@@ -55,44 +50,52 @@ def products():
             if item['stock_name'] == stock_name:
                 js = json.dumps({'data': item})
                 return js
-        # if not find the toy
-        # send back product not found error
-        js = json.dumps(
+        # response 404
+        res = json.dumps(
             {'error': {
                 'code': 404,
-                'message': 'product not found'
+                'message': 'Stock not found'
             }})
-        return js, 404
+        return res, 404
 
 
 # buy/sell stock
-@app.route('/trade', methods=['POST'])
+@catalog_server.route('/trade', methods=['POST'])
 def buy():
-    data = request.data
-    data = str(data, 'utf-8')
-    data = eval(data)
+    data = request.get_json()
+    data = json.loads(data)
     print(data)
-    stock_name,quantity = data['stock_name'],data['quantity']
-    print('name: %s, quantity: %s' % (stock_name, quantity))
+    stock_name,trade_type,quantity = data['stock_name'],data['type'],data['quantity']
+    print('name: %s,type: %s, quantity: %s' % (stock_name,trade_type,quantity))
     with lock:
         for item in catalog:
             if item['name'] == stock_name:
-                if item['quantity'] - int(quantity) >= 0:
-                    item['quantity'] -= int(quantity)
-                    js = json.dumps({'message': 'order has been placed'})
+                if trade_type == "Sell" and item['quantity'] + quantity <= 100:
+                    item['quantity'] += quantity
+                    res = json.dumps({'message':'order had been trade successfully!'})
                     write()
-                    # notify frontend
                     update_cache(stock_name)
-                    return js
+                    return res
+                elif trade_type == "Buy" and item['quantity'] - quantity >= 0:
+                    item["quantity"] -= quantity
+                    res = json.dumps({'message':'order had been trade successfully!'})
+                    write()
+                    update_cache(stock_name)
+                    return res
                 else:
-                    js = json.dumps({'message': 'out of stock'})
-                    return js, 404
-        js = json.dumps({'message': 'stock not found'})
-        return js, 404
+                    res = json.dumps({'message':'Trade failed!'})
+                    return res,404
+            
+        res = json.dumps({'message':'Stock not found!'})
+        return res,404
 
-if __name__ == '__main__':
+# notify front end server which stock be updated
+def update_cache(stock_name):
+    requests.get('http://0.0.0.0:xxxx/rm?stock_name=%s'%stock_name) # port tbd
+
+if __name__ == '__main__': #ensure this module implement as main module
     port=10086
     init_database()
     print(catalog)
-    
-    app.run(host='0.0.0.0', port=port, debug=True, threaded=True)
+
+    catalog_server.run(host='0.0.0.0', port=port, debug=True, threaded=True)
