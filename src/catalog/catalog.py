@@ -30,7 +30,7 @@ def write():
     global catalog_db
     data = ''
     for item in catalog_db:
-        data = '%s %s %s %s\n' % (item['stock_name'], item['price'],item['trade_volume'],item['quantity'])
+        data += '%s %s %s %s\n' % (item['stock_name'], item['price'],item['trade_volume'],item['quantity'])
     # lock file in disk
     with disk_lock:
         f = open('catalog.txt', 'w')
@@ -76,15 +76,16 @@ def buy():
                     print("sell successfully")
                     res = json.dumps({'message':'order had been trade successfully!'})
                     write()
-                    update_cache(stock_name)
+                    # update_cache(stock_name)
                     return res
                 elif trade_type == "Buy" and item['quantity'] - quantity >= 0:
                     item["quantity"] -= quantity
                     item['trade_volume'] += quantity
+                    print(catalog_db)
                     print("buy successfully")
                     res = json.dumps({'message':'order had been trade successfully!'})
                     write()
-                    update_cache(stock_name)
+                    # update_cache(stock_name)
                     return res
                 else:
                     res = json.dumps({'message':'Trade failed!'})
