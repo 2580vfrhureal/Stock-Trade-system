@@ -48,8 +48,8 @@ def products():
         for item in catalog_db:
             # if found target stock in database
             if item['stock_name'] == stock_name:
-                js = json.dumps({'data': item})
-                return js
+                res = json.dumps({'data': item})
+                return res
         # response 404
         res = json.dumps(
             {'error': {

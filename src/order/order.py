@@ -30,7 +30,7 @@ class order_log:
             with lock:
                 f = open('order_log%s.txt' % id, 'r')
                 lines = f.readlines()
-                
+
                 # find the latest successful trade order no
                 for line in reversed(lines):
                     if int(line.split(' ')[0]) > 0:
@@ -167,9 +167,9 @@ def leader():
     return json.dumps({'message': 'received leader id'})
 
 
-# alive API
-@order_server.route('/alive', methods=['GET'])
-def heartbeat():
+# ping API
+@order_server.route('/ping', methods=['GET'])
+def ping():
     res = json.dumps({'alive order server': id,
                       'port':port})
     return res
