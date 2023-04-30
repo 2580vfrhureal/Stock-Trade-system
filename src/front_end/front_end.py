@@ -8,11 +8,6 @@ import requests
 front_server = Flask(__name__)
 stock_cache = []
 lock = threading.Lock()  # file lock
-
-# get the ip address of catalog server and order server from env var
-# defult with 'catalog' and 'order'
-# since in docker-compose they are in special network which can communicate by host name
-catalog_server_addr = os.getenv('CATALOG', 'catalog')
 leader_server = os.getenv('ORDER', 'order')
 
 
@@ -137,7 +132,7 @@ def leader_election():
     alive_servers=sorted(alive_servers,key=lambda x: x['id']) # sort by id
     global leader_server
 
-    
+
     # set leader's port
     leader_server = alive_servers[-1]['port']
     for order in order_servers:
