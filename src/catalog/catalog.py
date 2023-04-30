@@ -30,7 +30,7 @@ def write():
     global catalog_db
     data = ''
     for item in catalog_db:
-        data = '%s %s %s %s\n' % (item['name'], item['price'],item['trade_volume'],item['quantity'])
+        data = '%s %s %s %s\n' % (item['stock_name'], item['price'],item['trade_volume'],item['quantity'])
     # lock file in disk
     with disk_lock:
         f = open('catalog.txt', 'w')
@@ -63,13 +63,13 @@ def products():
 @catalog_server.route('/trade', methods=['POST'])
 def buy():
     data = request.get_json()
-    data = json.loads(data)
+    # data = json.loads(data)
     print(data)
     stock_name,trade_type,quantity = data['stock_name'],data['type'],data['quantity']
     print('name: %s,type: %s, quantity: %s' % (stock_name,trade_type,quantity))
     with lock:
         for item in catalog_db:
-            if item['name'] == stock_name:
+            if item['stock_name'] == stock_name:
                 if trade_type == "Sell" and item['quantity'] + quantity <= 100:
                     item['quantity'] += quantity
                     item['trade_volume'] += quantity

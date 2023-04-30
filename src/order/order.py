@@ -65,7 +65,7 @@ def orders():
     stock_name = request.args.get('stock_name')
     trade_type = request.args.get('trade_type')
     quantity = request.args.get('quantity')
-    data = json.dumps({'stock_name': stock_name, 'trade_type':trade_type, 'quantity': quantity})
+    data = json.dumps({'stock_name': stock_name, 'type':trade_type, 'quantity': quantity})
     r = requests.post('http://0.0.0.0:10001/trade', data=data)
     if r.status_code == 200:
         order_no = order_log.increment()
