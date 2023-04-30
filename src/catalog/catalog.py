@@ -72,12 +72,14 @@ def buy():
             if item['name'] == stock_name:
                 if trade_type == "Sell" and item['quantity'] + quantity <= 100:
                     item['quantity'] += quantity
+                    item['trade_volume'] += quantity
                     res = json.dumps({'message':'order had been trade successfully!'})
                     write()
                     update_cache(stock_name)
                     return res
                 elif trade_type == "Buy" and item['quantity'] - quantity >= 0:
                     item["quantity"] -= quantity
+                    item['trade_volume'] += quantity
                     res = json.dumps({'message':'order had been trade successfully!'})
                     write()
                     update_cache(stock_name)
