@@ -8,6 +8,7 @@ catalog_server = Flask(__name__)
 catalog_db = []  # catalog db
 lock = threading.Lock()  # lock for dic db
 disk_lock = threading.Lock()  # lock for disk db
+ip_addr = '10.0.0.47'
 
 # initial database
 def init_database():
@@ -62,25 +63,28 @@ def products():
 # buy/sell stock
 @catalog_server.route('/trade', methods=['POST'])
 def buy():
-    data = request.get_json()
+    # data = request.get_json()
     # data = json.loads(data)
+    data = request.data
+    data = str(data, 'utf-8')
+    data = eval(data)
     print(data)
     stock_name,trade_type,quantity = data['stock_name'],data['type'],data['quantity']
     print('name: %s,type: %s, quantity: %s' % (stock_name,trade_type,quantity))
     with lock:
         for item in catalog_db:
             if item['stock_name'] == stock_name:
-                if trade_type == "Sell" and item['quantity'] + quantity <= 100:
-                    item['quantity'] += quantity
-                    item['trade_volume'] += quantity
+                if str(trade_type) == "Sell" and item['quantity'] + int(quantity) <= 100:
+                    item['quantity'] += int(quantity)
+                    item['trade_volume'] += int(quantity)
                     print("sell successfully")
                     res = json.dumps({'message':'order had been trade successfully!'})
                     write()
                     # update_cache(stock_name)
                     return res
-                elif trade_type == "Buy" and item['quantity'] - quantity >= 0:
-                    item["quantity"] -= quantity
-                    item['trade_volume'] += quantity
+                elif str(trade_type) == "Buy" and item['quantity'] - int(quantity) >= 0:
+                    item["quantity"] -= int(quantity)
+                    item['trade_volume'] += int(quantity)
                     print(catalog_db)
                     print("buy successfully")
                     res = json.dumps({'message':'order had been trade successfully!'})
@@ -96,11 +100,11 @@ def buy():
 
 # notify front end server which stock be updated
 def update_cache(stock_name):
-    requests.get('http://0.0.0.0:xxxx/rm?stock_name=%s'%stock_name) # port tbd
+    requests.get('http://%s:30001/rm?stock_name=%s'%(ip_addr,stock_name)) # port tbd
 
 if __name__ == '__main__': #ensure this module implement as main module
     port=10001
     init_database()
     print(catalog_db)
 
-    catalog_server.run(host='0.0.0.0', port=port, debug=True, threaded=True)
+    catalog_server.run(host=ip_addr, port=port, debug=True, threaded=True)

@@ -9,7 +9,7 @@ front_server = Flask(__name__)
 stock_cache = []
 lock = threading.Lock()  # file lock
 leader_server = os.getenv('ORDER', 'order')
-
+ip_addr = os.getenv("IP", "10.0.0.47")
 
 # check cache
 def isExist(stock_name):
@@ -54,7 +54,7 @@ def products():
     else:
         try:
             # send query request to catalog server
-            r = requests.get('http://0.0.0.0:10001/query?stock_name=%s' % stock_name)
+            r = requests.get('http://%s:10001/query?stock_name=%s' % (ip_addr,stock_name))
             res = res.json()
             if r.status_code == 200:
                 print(res['data']['stock_name'],
@@ -84,7 +84,7 @@ def orders():
     if request.method == 'GET':
         order_no = request.args.get('order_no')
         print(order_no)
-        r = requests.get('http://0.0.0.0:%s/query?order_no=%s' % (leader_server,order_no))
+        r = requests.get('http://%s:%s/query?order_no=%s' % (ip_addr,leader_server,order_no))
         if r.status_code == 200:
             return r.json()
         elif r.status_code == 404:
@@ -97,8 +97,8 @@ def orders():
         print(data)
         stock_name,trade_type,quantity = data['stock_name'],data['trade_type'],data['quantity']
         r = requests.get(
-            'http://0.0.0.0:%s/orders?toyname=%s&&trade_type=%s&&quantity=%s' %
-            (leader_server,stock_name, trade_type,quantity))
+            'http://%s:%s/orders?stock_name=%s&&trade_type=%s&&quantity=%s' %
+            (ip_addr,leader_server,stock_name,trade_type,quantity))
         return r.json()
         
 # return leader id
@@ -110,7 +110,7 @@ def leader():
 def ping():
     while True:
         try:
-            requests.get('http://0.0.0.0:%s/ping'%leader_server)
+            requests.get('http://%s:%s/ping'%(ip_addr,leader_server))
         except Exception as e:
             leader_election()
         sleep(5)
@@ -124,7 +124,7 @@ def leader_election():
     for order in order_servers:
         try:
             # if the order server alive,return the order server ID
-            r=requests.get('http://0.0.0.0:%s/ping'%order)
+            r=requests.get('http://%s:%s/ping'%(ip_addr,order))
             alive_servers.append({'id':r.json()['alive order server'],'port':order})
         except Exception as e:
             print('%s failed!'%order)
@@ -138,7 +138,7 @@ def leader_election():
     for order in order_servers:
         try:
             # notify each order server
-            r=requests.get('http://0.0.0.0:%s/leader?leader=%s'%(order,leader_server))
+            r=requests.get('http://%s:%s/leader?leader=%s'%(ip_addr,order,leader_server))
         except Exception as e:
             print('%s failed!'%order)
 
@@ -147,4 +147,4 @@ if __name__ == '__main__':
     leader_election()
     print('now leader is %s'%leader_server)
     threading.Thread(target=ping).start()
-    front_server.run(host='0.0.0.0', port=port, debug=True, threaded=True)
+    front_server.run(host=ip_addr, port=port, debug=True, threaded=True)

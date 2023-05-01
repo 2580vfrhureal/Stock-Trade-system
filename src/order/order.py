@@ -10,6 +10,7 @@ lock = threading.Lock()  # file lock
 order_db = []  # order db
 order_ports = ['20001', '20002', '20003'] #
 leader_id = '-1' # initial leader id
+ip_addr = '10.0.0.47'
 
 # order record generator
 class order_log:
@@ -41,34 +42,59 @@ class order_log:
 
 
 # query order
-@order_server.route('/query', methods=['GET'])
+@order_server.route("/query", methods=['GET'])
 def query():
     order_no = request.args.get('order_no')
+    print(order_no)
     for item in order_db:
         if item['order_no'] == int(order_no):
+            print(item)
             res = json.dumps({
                 'data': {
-                    'order_no': order_db['order_no'],
-                    'stock_name': order_db['stock_name'],
-                    'trade_type': order_db['trade_type'],
-                    'quantity': order_db['quantity']
+                    'order_no': item['order_no'],
+                    'stock_name': item['stock_name'],
+                    'trade_type': item['trade_type'],
+                    'quantity': item['quantity']
                 }
             })
             return res
     res = json.dumps({'error': {'code': 404, 'message': 'order not found'}})
     return res, 404
+    
 
+@order_server.route("/test",methods=["GET"])
+def test():
+    stock_name = 'Stock1'
+    r = requests.get('http://%s:10001/query?stock_name=%s' % (ip_addr,stock_name))
+    res = r.json()
+    re = json.dumps({
+        "name": res['data']['stock_name'],
+        'price': res['data']['price'],
+        'trade_volume': res['data']['trade_volume'],
+        'quantity': res['data']['quantity']
+    })
+    return re
+
+@order_server.route('/test1',methods=["GET"])
+def test1():
+    res = json.dumps({'connection': {'code': 200, 'message': 'order_server is working'}})
+    return res,200
 
 # process order
-@order_server.route('/orders', methods=['GET'])
+@order_server.route("/trade", methods=['GET'])
 def orders():
     stock_name = request.args.get('stock_name')
     trade_type = request.args.get('trade_type')
     quantity = request.args.get('quantity')
+    # stock_name = 'Stock1'
+    # trade_type ='Buy'
+    # quantity = 4
     data = json.dumps({'stock_name': stock_name, 'type':trade_type, 'quantity': quantity})
-    r = requests.post('http://0.0.0.0:10001/trade', data=data)
+    print(data)
+    r = requests.post(url='http://%s:10001/trade' %ip_addr, data=data)
+    print(r)
     if r.status_code == 200:
-        order_no = order_log.increment()
+        order_no = id_gen.increment()
         res = json.dumps({"order_no": order_no})
         with lock:
             order_db.append({
@@ -77,7 +103,7 @@ def orders():
                 'trade_type': trade_type,
                 'quantity': quantity
             })
-            f = open('order_log%s.txt' % id, 'a+')
+            f = open('order_log%s.txt' % id, 'a+') # add record
             s = '{} {} {} {}\n'.format(order_no,stock_name,trade_type,quantity)
             f.write(s)
             f.close()
@@ -96,25 +122,25 @@ def orders():
             "order_no": order_no,
             'message': r.json()['message']
         })
-        with lock:
-            order_db.append({
-                'order_no': order_no,
-                'stock_name': stock_name,
-                'trade_type': trade_type,
-                'quantity': quantity
-            })
-            f = open('order_log%s.txt' % id, 'a+')
-            s = '{} {} {} {}\n'.format(order_no,stock_name,trade_type,quantity)
-            f.write(s)
-            f.close()
-        order_info = json.dumps({
-            'order_no': order_no,
-            'stock_name': stock_name,
-            'trade_type': trade_type,
-            'quantity': quantity
-        })
-        # once order number is generated, notify other order nodes
-        sync(order_info)
+        # with lock:
+        #     order_db.append({
+        #         'order_no': order_no,
+        #         'stock_name': stock_name,
+        #         'trade_type': trade_type,
+        #         'quantity': quantity
+        #     })
+        #     f = open('order_log%s.txt' % id, 'a+')
+        #     s = '{} {} {} {}\n'.format(order_no,stock_name,trade_type,quantity)
+        #     f.write(s)
+        #     f.close()
+        # order_info = json.dumps({
+        #     'order_no': order_no,
+        #     'stock_name': stock_name,
+        #     'trade_type': trade_type,
+        #     'quantity': quantity
+        # })
+        # # once order number is generated, notify other order nodes
+        # sync(order_info)
         return res, 404
     else:
         return 'Unknown Error%s' % r.status_code
@@ -124,13 +150,13 @@ def orders():
 @order_server.route('/sync', methods=['POST'])
 def notify():
     data = request.get_json()
-    data = json.loads(data)
+    # data = json.loads(data)
     print(data)
     order_no, stock_name, trade_type,quantity = data['order_no'], data['stock_name'], data['trade_type'],data['quantity']
     # if the order is success, increase id stored in memory by one
     # in order to consistent order num with leader
-    if order_no!=-1:
-        order_log.increment()
+    # if order_no!=-1:
+    id_gen.increment()
     # store in memory and write in log
     with lock:
         order_db.append({
@@ -154,7 +180,7 @@ def sync(data):
         # just notify the 2 other order servers to sync order records
         if i != id:
             try:
-                requests.post('http://0.0.0.0:%s/sync' % order,data=data)
+                requests.post('http://%s:%s/sync' % (ip_addr,order),data=data)
             except Exception:
                 print('%s sync failed!' % order)
         i += 1
@@ -185,9 +211,10 @@ def init_order():
                 line = line.strip('\n')
                 info = line.split(' ')
                 item = {
-                    'number': info[0],
-                    'name': info[1],
-                    'quantity': info[2]
+                    'order_no': info[0],
+                    'stock_name': info[1],
+                    'trade_type': info[2],
+                    'quantity': info[3]
                 }
                 order_db.append(item)
         f.close()
@@ -205,11 +232,12 @@ def replica_log():
 
 
 if __name__ == '__main__':
-    id = int(os.getenv('ID', 5))
-    port = os.getenv('PORT', 10010)
-    replica_log()
+    id = int(os.getenv('ID', 3))
+    port = os.getenv('PORT', 20003)
+    # replica_log()
     id_gen = order_log()
     init_order()
     print(order_db)
     print(port, ' ', id)
-    order_server.run(host='0.0.0.0', port=port, threaded=True)
+    order_server.run(host=ip_addr, port=port, threaded=True)
+
