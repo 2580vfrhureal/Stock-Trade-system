@@ -10,6 +10,7 @@ stock_cache = []
 lock = threading.Lock()  # file lock
 leader_server = os.getenv('ORDER', 'order')
 ip_addr = os.getenv("IP", "10.0.0.47")
+port=30001
 
 # check cache
 def isExist(stock_name):
@@ -29,13 +30,27 @@ def add(item):
 # response for the requests from catalog server
 @front_server.route('/rm', methods=['GET'])
 def rm():
+    print(stock_cache)
     stock_name = request.args.get('stock_name')
+    print("removing %s" % stock_name)
     if isExist(stock_name):
         with lock:
+            i = 0
             for item in stock_cache:
                 if item['stock_name'] == stock_name:
                     stock_cache.remove(item)
-                    return 'removed successfully'
+                    print("removed successfully")
+                    print(stock_cache)
+                    res = json.dumps({
+                        "stock_name": stock_name,
+                        "message": "removed successfully"
+                    })
+                    return res
+                i+=1
+    res = json.dumps({
+        "message": "this stock isn't exist in cache"
+    })
+    return res
 
 
 # query stocks
@@ -95,12 +110,15 @@ def orders():
         else:
             return 'unexpected error'
     elif request.method == 'POST':
-        data = request.get_json()
+        # data = request.get_json()
         # data = json.loads(data)
+        data = request.data
+        data = str(data, 'utf-8')
+        data = eval(data)
         print(data)
         stock_name,trade_type,quantity = data['stock_name'],data['trade_type'],data['quantity']
         r = requests.get(
-            'http://%s:%s/orders?stock_name=%s&&trade_type=%s&&quantity=%s' %
+            'http://%s:%s/trade?stock_name=%s&trade_type=%s&quantity=%s' %
             (ip_addr,leader_server,stock_name,trade_type,quantity))
         return r.json()
         
@@ -146,7 +164,7 @@ def leader_election():
             print('%s failed!'%order)
 
 if __name__ == '__main__':
-    port=30001
+    
     leader_election()
     print('now leader is %s'%leader_server)
     threading.Thread(target=ping).start()

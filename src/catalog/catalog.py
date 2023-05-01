@@ -104,6 +104,7 @@ def buy():
 # notify front end server which stock be updated
 def update_cache(stock_name):
     requests.get('http://%s:30001/rm?stock_name=%s'%(ip_addr,stock_name)) # port tbd
+    print("sent update cache request")
 
 if __name__ == '__main__': #ensure this module implement as main module
     port=10001
