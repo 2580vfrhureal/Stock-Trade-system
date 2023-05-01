@@ -3,12 +3,13 @@ import threading
 from time import sleep
 from flask import Flask, request
 import requests
+import os
 
 catalog_server = Flask(__name__)
 catalog_db = []  # catalog db
 lock = threading.Lock()  # lock for dic db
 disk_lock = threading.Lock()  # lock for disk db
-ip_addr = '10.0.0.47'
+ip_addr = os.getenv("CATALOG", "10.0.0.47")
 
 # initial database
 def init_database():
