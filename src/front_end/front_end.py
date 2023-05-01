@@ -46,7 +46,7 @@ def products():
     # if exist in cache
     if isExist(stock_name):
         for item in stock_cache:
-            if item['name'] == stock_name:
+            if item['stock_name'] == stock_name:
                 res = json.dumps(item)
                 print('sent from cache')
                 return res
@@ -54,8 +54,11 @@ def products():
     else:
         try:
             # send query request to catalog server
+            print("sent query to catalog server")
             r = requests.get('http://%s:10001/query?stock_name=%s' % (ip_addr,stock_name))
-            res = res.json()
+            # res = r.json()
+            res = json.loads(r.text)
+            print(res)
             if r.status_code == 200:
                 print(res['data']['stock_name'],
                     res['data']['price'],
@@ -63,7 +66,7 @@ def products():
                     res['data']['quantity'],
                     flush=True)
                 re = json.dumps({
-                    "name": res['data']['stock_name'],
+                    'stock_name': res['data']['stock_name'],
                     'price': res['data']['price'],
                     'trade_volume': res['data']['trade_volume'],
                     'quantity': res['data']['quantity']

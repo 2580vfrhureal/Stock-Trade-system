@@ -51,6 +51,8 @@ def products():
             # if found target stock in database
             if item['stock_name'] == stock_name:
                 res = json.dumps({'data': item})
+                print(res)
+                print("sending query result back")
                 return res
         # response 404
         res = json.dumps(
@@ -81,7 +83,7 @@ def buy():
                     print("sell successfully")
                     res = json.dumps({'message':'order had been trade successfully!'})
                     write()
-                    # update_cache(stock_name)
+                    update_cache(stock_name)
                     return res
                 elif str(trade_type) == "Buy" and item['quantity'] - int(quantity) >= 0:
                     item["quantity"] -= int(quantity)
@@ -90,7 +92,7 @@ def buy():
                     print("buy successfully")
                     res = json.dumps({'message':'order had been trade successfully!'})
                     write()
-                    # update_cache(stock_name)
+                    update_cache(stock_name)
                     return res
                 else:
                     res = json.dumps({'message':'Trade failed!'})
