@@ -10,7 +10,8 @@ lock = threading.Lock()  # file lock
 order_db = []  # order db
 order_ports = ['20001', '20002', '20003'] #
 leader_id = '-1' # initial leader id
-ip_addr = os.getenv("ORDER", "10.0.0.47")
+ip_addr = os.getenv("ORDER", "localhost")
+
 
 # order record generator
 class order_log:
@@ -148,9 +149,10 @@ def orders():
 
 # sync order log with the leader node
 @order_server.route('/sync', methods=['POST'])
-def notify():
-    data = request.get_json()
-    # data = json.loads(data)
+def sync_log():
+    data = request.data
+    data = str(data, 'utf-8')
+    data = eval(data)
     print(data)
     order_no, stock_name, trade_type,quantity = data['order_no'], data['stock_name'], data['trade_type'],data['quantity']
     # if the order is success, increase id stored in memory by one
@@ -181,6 +183,7 @@ def sync(data):
         if i != id:
             try:
                 requests.post('http://%s:%s/sync' % (ip_addr,order),data=data)
+                print("sent order log sync requests")
             except Exception:
                 print('%s sync failed!' % order)
         i += 1
@@ -218,26 +221,62 @@ def init_order():
                 }
                 order_db.append(item)
         f.close()
+    return len(order_db)
 
 # replica order_log from other nodes
-def replica_log():
-    if os.path.exists('order_log1.txt') or os.path.exists(
-            'order_log2.txt') or os.path.exists('order_log3.txt'):
-        if id == 1:
-            copyfile('order_log2.txt', 'order_log1.txt')
-        else:
-            source_file = 'order_log%s.txt' % ((id - 1) % 3)
-            dis_file = 'order_log%s.txt' % id
-            copyfile(source_file, dis_file)
+def sync_log():
+    # if os.path.exists('order_log1.txt') or os.path.exists(
+    #         'order_log2.txt') or os.path.exists('order_log3.txt'):
+    #     if id == 1:
+    #         copyfile('order_log2.txt', 'order_log1.txt')
+    #     else:
+    #         source_file = 'order_log%s.txt' % ((id - 1) % 3)
+    #         dis_file = 'order_log%s.txt' % id
+    #         copyfile(source_file, dis_file)
 
+    # find latest modified .txt as source file
+    exist_logs = []
+    timestamps = []
+    latest_file = ''
+    for i in range(1,4):
+        if os.path.exists('order_log%s.txt' % i):
+            exist_logs.append('order_log%s.txt' % i)
+
+    for file in exist_logs:
+        # timestamps[file] = os.path.getmtime(file)
+        # latest_file = sorted(timestamps.items(), key=lambda x: x[1],reverse=True)[0] # sort by modify time
+        # latest_file = timestamps[0][0]
+        modified_time = os.path.getmtime(file)
+        file_time = {'file_name': str(file),
+                     'latest_modified':modified_time}
+        timestamps.append(file_time)
+        print(timestamps)
+        timestamps = sorted(timestamps,key=lambda x: x['latest_modified']) 
+        latest_file = timestamps[-1]['file_name']
+        print("latest modified file is %s" % latest_file)
+    if latest_file != str("order_log%s.txt" %str(id)):
+        copyfile("%s" % latest_file, "order_log%s.txt" %str(id) ) # sync data with latest active order server
+    print("replicate successfully")
+
+def miss_orders(pre_amount):
+    print("missed prders:\n")
+    for item in order_db:
+        if int(item['order_no']) > int(pre_amount):
+            print('{} {} {} {}\n'.format(
+                item['order_no'],item['stock_name'],item['trade_type'],item['quantity']))
 
 if __name__ == '__main__':
-    id = int(os.getenv('ID', 3))
-    port = os.getenv('PORT', 20003)
-    # replica_log()
+    id = int(os.getenv('ID', 1))
+    port = os.getenv('PORT', 20001)
     id_gen = order_log()
-    init_order()
-    print(order_db)
+    pre_amount = init_order() # get previous order amount
+    # print("previous order db:\n")
+    # print(order_db)
+    sync_log() # replicate order log
+    cur_amount = init_order()
+    # print("current order db:\n")
+    # print(order_db)
+    miss_orders(pre_amount)
     print(port, ' ', id)
-    order_server.run(host=ip_addr, port=port, threaded=True)
+    order_server.run(host=ip_addr, port=port, debug=True, threaded=True)
 
