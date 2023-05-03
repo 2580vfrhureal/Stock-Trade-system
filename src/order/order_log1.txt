@@ -1,4 +1,0 @@
-1 Stock1 Buy 1
-2 Stock1 Sell 1
-3 Stock3 Buy 1
-4 Stock3 Sell 1
