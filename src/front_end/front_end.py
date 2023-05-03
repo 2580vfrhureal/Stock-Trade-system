@@ -9,7 +9,7 @@ front_server = Flask(__name__)
 stock_cache = []
 lock = threading.Lock()  # file lock
 leader_server = os.getenv('ORDER', '20003') #port
-ip_addr = os.getenv("IP", "localhost")
+ip_addr = os.getenv("IP", "0.0.0.0")
 port=30001
 
 # check cache
@@ -165,11 +165,13 @@ def leader_election():
         except Exception as e:
             print('%s failed!'%order)
 
-        
+@front_server.route('/',methods=['GET'])
+def hello():
+    return 'hello world'
 
 if __name__ == '__main__':
     
-    leader_election()
+    #leader_election()
     print('now leader is %s'%leader_server)
-    threading.Thread(target=ping).start()
+    #threading.Thread(target=ping).start()
     front_server.run(host=ip_addr, port=port, debug=True, threaded=True)
