@@ -262,6 +262,7 @@ def miss_orders(pre_amount):
 if __name__ == '__main__':
     id = int(os.getenv('ID', 1))
     port = os.getenv('PORT', 20001)
+    port = int(port)
     id_gen = order_log()
     pre_amount = init_order() # get previous order amount
     # print("previous order db:\n")
