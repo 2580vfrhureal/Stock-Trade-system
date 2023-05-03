@@ -11,7 +11,8 @@ lock = threading.Lock()  # file lock
 leader_server = os.getenv('ORDER', '20003') #port
 ip_addr = os.getenv("IP", "0.0.0.0")
 port=30001
-
+cache_flag =os.getenv("FLAG", "TRUE")
+cache_flag =bool(cache_flag)
 # check cache
 def isExist(stock_name):
     for item in stock_cache:
@@ -59,7 +60,7 @@ def products():
     stock_name = request.args.get('stock_name')
     print(stock_name)
     # if exist in cache
-    if isExist(stock_name):
+    if isExist(stock_name) and cache_flag:
         for item in stock_cache:
             if item['stock_name'] == stock_name:
                 res = json.dumps(item)
