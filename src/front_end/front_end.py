@@ -172,7 +172,7 @@ def hello():
 
 if __name__ == '__main__':
     
-    #leader_election()
+    leader_election()
     print('now leader is %s'%leader_server)
-    #threading.Thread(target=ping).start()
+    threading.Thread(target=ping).start()
     front_server.run(host=ip_addr, port=port, debug=True, threaded=True)
