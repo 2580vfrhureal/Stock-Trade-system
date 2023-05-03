@@ -52,7 +52,7 @@ def client(s):
           
 
 
-# test stock query service
+# 2 test stock query service
 def query_stock(s):
     stock_name = input('input stock name(e.g:Stock1):\n')
     num = int(input('input request times:\n'))
@@ -63,6 +63,16 @@ def query_stock(s):
     end_time = time()
     print('running time: ', end_time - start_time, 's')
 
+# query order
+def query_order(s):
+    order_query = input('input order_no:\n')
+    num = int(input('input request times:\n'))
+    start_time = time()
+    for i in range(num):
+        r = requests.get(order_url + '?order_no=' + str(order_query))  # Send a serials of HTTP GET to front-end server
+        print(r.json())
+    end_time = time()
+    print('running time: ', end_time - start_time, 's')
 
 # test trade service
 def trade(s):
