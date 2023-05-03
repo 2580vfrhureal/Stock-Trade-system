@@ -265,12 +265,9 @@ if __name__ == '__main__':
     port = int(port)
     id_gen = order_log()
     pre_amount = init_order() # get previous order amount
-    # print("previous order db:\n")
-    # print(order_db)
     sync_log() # replicate order log
     init_order()
-    # print("current order db:\n")
-    # print(order_db)
+    
     miss_orders(pre_amount)
     print(port, ' ', id)
     order_server.run(host=ip_addr, port=port, debug=True, threaded=True)
