@@ -221,19 +221,12 @@ def init_order():
                 }
                 order_db.append(item)
         f.close()
-    return len(order_db)
+        return len(order_db)
+    else:
+        return 0
 
 # replica order_log from other nodes
 def sync_log():
-    # if os.path.exists('order_log1.txt') or os.path.exists(
-    #         'order_log2.txt') or os.path.exists('order_log3.txt'):
-    #     if id == 1:
-    #         copyfile('order_log2.txt', 'order_log1.txt')
-    #     else:
-    #         source_file = 'order_log%s.txt' % ((id - 1) % 3)
-    #         dis_file = 'order_log%s.txt' % id
-    #         copyfile(source_file, dis_file)
-
     # find latest modified .txt as source file
     exist_logs = []
     timestamps = []
@@ -242,21 +235,22 @@ def sync_log():
         if os.path.exists('order_log%s.txt' % i):
             exist_logs.append('order_log%s.txt' % i)
 
-    for file in exist_logs:
+    if len(exist_logs) != 0:
+        for file in exist_logs:
         # timestamps[file] = os.path.getmtime(file)
         # latest_file = sorted(timestamps.items(), key=lambda x: x[1],reverse=True)[0] # sort by modify time
         # latest_file = timestamps[0][0]
-        modified_time = os.path.getmtime(file)
-        file_time = {'file_name': str(file),
-                     'latest_modified':modified_time}
-        timestamps.append(file_time)
-        print(timestamps)
-        timestamps = sorted(timestamps,key=lambda x: x['latest_modified']) 
-        latest_file = timestamps[-1]['file_name']
-        print("latest modified file is %s" % latest_file)
-    if latest_file != str("order_log%s.txt" %str(id)):
-        copyfile("%s" % latest_file, "order_log%s.txt" %str(id) ) # sync data with latest active order server
-    print("replicate successfully")
+            modified_time = os.path.getmtime(file)
+            file_time = {'file_name': str(file),
+                        'latest_modified':modified_time}
+            timestamps.append(file_time)
+            print(timestamps)
+            timestamps = sorted(timestamps,key=lambda x: x['latest_modified']) 
+            latest_file = timestamps[-1]['file_name']
+            print("latest modified file is %s" % latest_file)
+        if latest_file != str("order_log%s.txt" %str(id)):
+            copyfile("%s" % latest_file, "order_log%s.txt" %str(id) ) # sync data with latest active order server
+            print("replicate successfully")
 
 def miss_orders(pre_amount):
     print("missed prders:\n")

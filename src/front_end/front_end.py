@@ -8,8 +8,8 @@ import requests
 front_server = Flask(__name__)
 stock_cache = []
 lock = threading.Lock()  # file lock
-leader_server = os.getenv('ORDER', 'order') #port
-ip_addr = os.getenv("IP", "10.0.0.47")
+leader_server = os.getenv('ORDER', '20003') #port
+ip_addr = os.getenv("IP", "localhost")
 port=30001
 
 # check cache
