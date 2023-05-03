@@ -273,7 +273,7 @@ if __name__ == '__main__':
     # print("previous order db:\n")
     # print(order_db)
     sync_log() # replicate order log
-    cur_amount = init_order()
+    init_order()
     # print("current order db:\n")
     # print(order_db)
     miss_orders(pre_amount)
