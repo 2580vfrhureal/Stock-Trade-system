@@ -9,7 +9,7 @@ catalog_server = Flask(__name__)
 catalog_db = []  # catalog db
 lock = threading.Lock()  # lock for dic db
 disk_lock = threading.Lock()  # lock for disk db
-ip_addr = os.getenv("CATALOG", "localhost")
+ip_addr = os.getenv("CATALOG", "0.0.0.0")
 
 # initial database
 def init_database():

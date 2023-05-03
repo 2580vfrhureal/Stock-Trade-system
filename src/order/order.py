@@ -10,7 +10,7 @@ lock = threading.Lock()  # file lock
 order_db = []  # order db
 order_ports = ['20001', '20002', '20003'] #
 leader_id = '-1' # initial leader id
-ip_addr = os.getenv("ORDER", "localhost")
+ip_addr = os.getenv("ORDER", "0.0.0.0")
 
 
 # order record generator

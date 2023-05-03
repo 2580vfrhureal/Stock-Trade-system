@@ -15,12 +15,12 @@ class TestLoadPerformance(unittest.TestCase):
 
     def test_load_query(self):
         #warnings.simplefilter('ignore', ResourceWarning)
-        for i in range(100):
+        for i in range(1000):
             res = requests.get(queryStock_url + 'Stock1')
 
     def test_load_queryOrder(self):
         #warnings.simplefilter('ignore', ResourceWarning)
-        for i in range(100):
+        for i in range(1000):
             res = requests.get(queryOrder_url + '30')
 
     def test_load_trade(self):

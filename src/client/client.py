@@ -52,7 +52,7 @@ def client(s):
           
 
 
-# test stock query service
+# 2 test stock query service
 def query_stock(s):
     stock_name = input('input stock name(e.g:Stock1):\n')
     num = int(input('input request times:\n'))
@@ -63,8 +63,18 @@ def query_stock(s):
     end_time = time()
     print('running time: ', end_time - start_time, 's')
 
+# 3 query order
+def query_order(s):
+    order_query = input('input order_no:\n')
+    num = int(input('input request times:\n'))
+    start_time = time()
+    for i in range(num):
+        r = requests.get(order_url + '?order_no=' + str(order_query))  # Send a serials of HTTP GET to front-end server
+        print(r.json())
+    end_time = time()
+    print('running time: ', end_time - start_time, 's')
 
-# test trade service
+# 4 trade service
 def trade(s):
     product = input('input the stock name you would like to trade: \n')
     trade_type = input('input trade type:Buy/Sell')
@@ -78,6 +88,7 @@ def trade(s):
     end_time = time()
     print('running time: ', end_time - start_time, 's')
 
+# 5
 def check_consistency():
     for order in success_order:
         order_query = order["order_no"]
@@ -101,8 +112,10 @@ def main():
         elif str(msg) == '2':
             query_stock(s)
         elif str(msg) == '3':
-            trade(s)
+            query_order(s)
         elif str(msg) == '4':
+            trade(s)
+        elif str(msg) == '5':
             check_consistency()
             s.close()
         else:
