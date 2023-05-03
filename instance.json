@@ -4,10 +4,10 @@
         {
             "AmiLaunchIndex": 0,
             "ImageId": "ami-0d73480446600f555",
-            "InstanceId": "i-0d357516a9416b217",
+            "InstanceId": "i-0588163cb41a73ccb",
             "InstanceType": "t2.micro",
             "KeyName": "vockey",
-            "LaunchTime": "2023-05-03T17:34:34+00:00",
+            "LaunchTime": "2023-05-03T19:31:47+00:00",
             "Monitoring": {
                 "State": "disabled"
             },
@@ -16,8 +16,8 @@
                 "GroupName": "",
                 "Tenancy": "default"
             },
-            "PrivateDnsName": "ip-172-31-24-32.ec2.internal",
-            "PrivateIpAddress": "172.31.24.32",
+            "PrivateDnsName": "ip-172-31-25-74.ec2.internal",
+            "PrivateIpAddress": "172.31.25.74",
             "ProductCodes": [],
             "PublicDnsName": "",
             "State": {
@@ -29,15 +29,15 @@
             "VpcId": "vpc-0ff189b7ac6062564",
             "Architecture": "x86_64",
             "BlockDeviceMappings": [],
-            "ClientToken": "0878f258-197c-4b1e-9a7c-d50a49cd0b7b",
+            "ClientToken": "9491cf6b-9b91-4660-b352-0f38827f7f7b",
             "EbsOptimized": false,
             "EnaSupport": true,
             "Hypervisor": "xen",
             "NetworkInterfaces": [
                 {
                     "Attachment": {
-                        "AttachTime": "2023-05-03T17:34:34+00:00",
-                        "AttachmentId": "eni-attach-0dc7e3ee60fea5315",
+                        "AttachTime": "2023-05-03T19:31:47+00:00",
+                        "AttachmentId": "eni-attach-021889002912bbd11",
                         "DeleteOnTermination": true,
                         "DeviceIndex": 0,
                         "Status": "attaching",
@@ -51,16 +51,16 @@
                         }
                     ],
                     "Ipv6Addresses": [],
-                    "MacAddress": "0a:e9:bf:bc:3c:cf",
-                    "NetworkInterfaceId": "eni-02109f8a47a946770",
+                    "MacAddress": "0a:31:1b:4a:b4:ad",
+                    "NetworkInterfaceId": "eni-032c655f39ff129a5",
                     "OwnerId": "919571902844",
-                    "PrivateDnsName": "ip-172-31-24-32.ec2.internal",
-                    "PrivateIpAddress": "172.31.24.32",
+                    "PrivateDnsName": "ip-172-31-25-74.ec2.internal",
+                    "PrivateIpAddress": "172.31.25.74",
                     "PrivateIpAddresses": [
                         {
                             "Primary": true,
-                            "PrivateDnsName": "ip-172-31-24-32.ec2.internal",
-                            "PrivateIpAddress": "172.31.24.32"
+                            "PrivateDnsName": "ip-172-31-25-74.ec2.internal",
+                            "PrivateIpAddress": "172.31.25.74"
                         }
                     ],
                     "SourceDestCheck": true,
@@ -114,5 +114,5 @@
         }
     ],
     "OwnerId": "919571902844",
-    "ReservationId": "r-04ea31a11c3581e03"
+    "ReservationId": "r-0c13b464b21a6a5f7"
 }

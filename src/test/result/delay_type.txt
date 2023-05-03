@@ -1,0 +1,3 @@
+query stocks Average latency: 0.0900s
+query order no average latency: 0.0722s
+trade average:0.0867s
