@@ -1,5 +1,0 @@
-InstanceID:i-0588163cb41a73ccb
-publicDNS:ec2-54-90-183-189.compute-1.amazonaws.com
-publicIP:54.90.183.189
-personal access token(github):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
-ssh -i labsuser.pem ubuntu@ec2-54-90-183-189.compute-1.amazonaws.com
