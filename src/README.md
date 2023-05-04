@@ -1,4 +1,11 @@
 ## how to run
+
+### parameters:  
+instance type: `t2.micro`  
+InstanceID: `i-0588163cb41a73ccb`  
+publicDNS: `ec2-54-90-183-189.compute-1.amazonaws.com`  
+publicIP: `54.90.183.189`
+
 config aws:  
 ```shell
 $ aws configure  
@@ -34,7 +41,7 @@ $ ID=2 PORT=20002 python3 order.py
 $ ID=3 PORT=20003 python3 order.py
 $ python3 front_end.py
 ```
-start client.py:  P is the probability can adjust between 0 and 1
+start client.py:  p is the probability can adjust between 0 and 1
 ```shell
 $ FRONT=<aws-publicIP> p=0.5 python client.py 
 ```
