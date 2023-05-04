@@ -1,4 +1,4 @@
-# commands
+## how to run
 config aws:  
 ```shell
 $ aws configure  
