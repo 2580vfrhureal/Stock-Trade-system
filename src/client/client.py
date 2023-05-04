@@ -76,11 +76,11 @@ def query_order(s):
 
 # 4 trade service
 def trade(s):
-    product = input('input the stock name you would like to trade: \n')
+    stock_name = input('input the stock name you would like to trade: \n')
     trade_type = input('input trade type:Buy/Sell')
     quantity = int(input('input quantity:\n'))
     num = int(input('input request times:\n'))
-    data = json.dumps({'stock_name': product, 'trade_type':trade_type, 'quantity': quantity})
+    data = json.dumps({'stock_name': stock_name, 'trade_type':trade_type, 'quantity': quantity})
     start_time = time()
     for i in range(num):
         resp = requests.post(url=order_url,data=data) # Send an post request to front-end server
