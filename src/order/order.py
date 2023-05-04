@@ -123,25 +123,6 @@ def orders():
             "order_no": order_no,
             'message': r.json()['message']
         })
-        # with lock:
-        #     order_db.append({
-        #         'order_no': order_no,
-        #         'stock_name': stock_name,
-        #         'trade_type': trade_type,
-        #         'quantity': quantity
-        #     })
-        #     f = open('order_log%s.txt' % id, 'a+')
-        #     s = '{} {} {} {}\n'.format(order_no,stock_name,trade_type,quantity)
-        #     f.write(s)
-        #     f.close()
-        # order_info = json.dumps({
-        #     'order_no': order_no,
-        #     'stock_name': stock_name,
-        #     'trade_type': trade_type,
-        #     'quantity': quantity
-        # })
-        # # once order number is generated, notify other order nodes
-        # sync(order_info)
         return res, 404
     else:
         return 'Unknown Error%s' % r.status_code
@@ -237,9 +218,6 @@ def sync_log():
 
     if len(exist_logs) != 0:
         for file in exist_logs:
-        # timestamps[file] = os.path.getmtime(file)
-        # latest_file = sorted(timestamps.items(), key=lambda x: x[1],reverse=True)[0] # sort by modify time
-        # latest_file = timestamps[0][0]
             modified_time = os.path.getmtime(file)
             file_time = {'file_name': str(file),
                         'latest_modified':modified_time}
@@ -253,7 +231,7 @@ def sync_log():
             print("replicate successfully")
 
 def miss_orders(pre_amount):
-    print("missed prders:\n")
+    print("missed orders:\n")
     for item in order_db:
         if int(item['order_no']) > int(pre_amount):
             print('{} {} {} {}\n'.format(
