@@ -1,7 +1,7 @@
 # Lab 3: Asterix and Double Trouble  --  Replication, Caching, and Fault Tolerance
 
 
-## Lab Overview
+## **Lab Overview** 
 
 This project added caching, replication, and fault tolerance to the stock bazaar application in lab2. 
 Like in lab 2, the server is made with the front-end part and the back-end parts. 
@@ -16,11 +16,11 @@ For instance, with `@app.route()`, we pass a URL into the function `route()`, an
 We also have implemented functionality like caching, replication, and fault tolerance in this lab. 
 
 
-## components
+## **Components**
 
-### FRONTEND
+### **FRONTEND**
 
-front_end.py composites with serveral parts. The cache contains a list of stock items in json formate. 
+front_end.py composites with serveral parts. The cache contains a list of stock items in JSON formate. 
 The lock is used to synchronize access to the cache that guarantees no concurrent access leading to data corruption.
 REST API enables the server listens to HTTP requests on selected port and URL routes the requests to according functionalities.
 Leader Election is done periodically with a leader election algorithm. 
@@ -29,102 +29,90 @@ select a new leader upon the time when the current leader fails.
 
 API:
 
-@front_server.route('/rm', methods=['GET']) removes a stock item from the cache.
+**@front_server.route('/rm', methods=['GET'])** removes a stock item from the cache.
 
-@front_server.route('/stocks', methods=['GET']) retrieves stock json data with the stock name. 
-The server first checks if the stock data is available in the cache. If it's available in the cache, the server will return the stock json object.
-Otherwise the server will retrieve the stock data by sending a query request to the catalog server, then caches the data in the cache and return the stock json object.
+**@front_server.route('/stocks', methods=['GET'])** retrieves stock JSON data with the stock name. 
+The server first checks if the stock data is available in the cache. If it's available in the cache, the server will return the stock JSON object.
+Otherwise the server will retrieve the stock data by sending a query request to the catalog server, then caches the data in the cache and return the stock JSON object.
 
-@front_server.route('/orders', methods=['POST', 'GET']) will create a new order on the order server if the method is 'POST' and will retrieve the order status for a given order number if the method is 'GET'. 
+**@front_server.route('/orders', methods=['POST', 'GET'])** will create a new order on the order server if the method is 'POST' and will retrieve the order status for a given order number if the method is 'GET'. 
 
-@front_server.route('/leader',methods=['GET']) will return the current leader order server ID.
+**@front_server.route('/leader',methods=['GET'])** will return the current leader order server ID.
 
 
-## Part 1: Caching
 
-front-end & caching to the front-end
+### **CATALOG**
 
-s. The front-end server starts with an empty in-memory cache. Upon receiving a stock query
-request, it first checks the in-memory cache to see whether it can be served from the cache. If not,
-the request will then be forwarded to the catalog service, and the result returned by the catalog
-service will be stored in the cache.
+The catalog database is implemented as a list of dictionaries where each dictionary represents a stock. Each stock has the fields in stock_name, price, trade_volume, and quantity.
+The catalog database is initialized by loading the data from 'catalog.txt'
 
-Cache consistency
+Catalog address the concurrency problem by using two locks. First lock "lock" is used when querying and updating the stock database. Second lock "disk_lock" is used when reading/writing to the catalog file on the disk. 
+Concurrency:
 
- needs to be addressed whenever a stock is bought or sold. You should implement a
-server-push technique: the catalog server sends invalidation requests to the front-end server after each
-trade. The invalidation requests cause the front-end service to remove the corresponding stock from
-the cache.
+**update_cache()** is implement to notify the front-end server of any changes made to the catalog database.
 
-## Part 2: Replication
+**@catalog_server.route('/query', methods=['GET'])**
+takes in stock_name as parameter and returns a JSON object that contains corresponding stock information from the catalog database. If the stock is not found in the database, it returns a JSON object with code 404.
 
-To make sure that our stock bazaar doesn't lose any order information due to crash failures, we want
-to replicate the order service. When you start the stock bazaar application, you should first start
-the catalog service. Then you start three replicas of the order service, each with a unique id
-number and its own database file. There should always be 1 leader node and the rest are follower
-nodes. You do **NOT** need to implement a leader election algorithm. Instead the front-end service
-will always try to pick the node with the highest id number as the leader.
+**@catalog_server.route('/trade', methods=['POST'])** takes stock_name, action choice of buy/sell, and transaction quantity as a request body. Meanwhile, it updates the catalog database accordingly. If the stock cannot be found in the database or the requested transaction cannot be fulfilled due to insufficient quantity or overstock, it returns a 404 error. After the buying or selling, it updates the information in the front-end cache.
 
-When the front-end service starts, it will read the id number and address of each replica of the
-order service (this can be done using configuration files/environment variables/command line
-parameters). It will ping (here ping means sending a health check request rather than the `ping`
-command) the replica with the highest id number to see if it's responsive. If so it will notify all
-the replicas that a leader has been selected with the id number, otherwise it will try the replica
-with the second highest id number. The process repeats until a leader has been found.
 
-When a trade request or an order query request arrives, the front-end service only forwards the
-request to the leader. In case of a successful trade (a new order number is generated), the leader
-node will propagate the information of the new order to the follower nodes to maintain data
-consistency.
 
-## Part 3: Fault Tolerance
+### **ORDER**
 
-In this part you will handle failures of the order service. In this lab you only need to deal with
-crash failure tolerance rather than Byzantine failure tolerance.
+order.py processing orders, syncing orders with leader nodes, and querying orders.
 
-First We want to make sure that when any replica crashes (including the leader), trade requests and
-order query requests can still be handled and return the correct result. To achieve this, when the
-front-end service finds that the leader node is unresponsive, it will redo the leader selection
-algorithm as described in [Part2](#part-2-replication).
 
-We also want to make sure that when a crashed replica is back online, it can synchronize with the
-other replicas to retrieve the order information that it has missed during the offline time. When a
-replica comes back online from a crash, it will look at its database file and get the latest order
-number that it has and ask the other replicas what orders it has missed since that order number.
+**@order_server.route("/query", methods=['GET'])** answers for querying orders from the order database. It takes in order number and return the matched order. If one order is not found, query() returns a JSON object with code 404.
 
-## Part 4: Testing and Evaluation with Deployment on AWS
 
-First, write some simple test cases to verify that your code works as expected. You should test both
-each individual microservice as well as the whole application. Submit your test cases and test
-output in a test directory.
+**@order_server.route("/test", methods=["GET"])**process orders and test the connectivity of the order server. This return a stock JSON object.
 
-Next, deploy your application on an `m5a.xlarge` instance in the `us-east-1` region on AWS. We will
-provide instructions on how to do this in lablet 5. Run 5 clients on your local machine. Measure
-the latency seen by each client for different types of requests. Change the probability p of a
-follow up trade request from 0 to 80%, with an increment of 20%, and record the result for each p
-setting. Make simple plots showing the values of p on the X-axis and the latency of different types
-of request on the y-axis. Also do the same experiments but with caching turned off, estimate how
-much benefits does caching provide by comparing the results.
 
-Finally, simulate crash failures by killing a random order service replica while the client is
-running, and then bring it back online after some time. Repeat this experiment several times and
-make sure that you test the case when the leader is killed. Can the clients notice the failures?
-(either during order requests or the final order checking phase) or are they transparent to the
-clients? Do all the order service replicas end up with the same database file?
+**@order_server.route('/test1',methods=["GET"])** gives a specific example for testing the connectivity of the order server.
 
-## What to submit
 
-Your solution should contain source code for both parts separately inside the `src` directory. Then
-under the directory for each part, you should have a separate folder for each
-component/microservice, e.g., a `client` folder for client code, a `front-end` folder for the
-front-end service, etc.
+**@order_server.route("/trade", methods=['GET'])** handles stock trades. It takes in the stock name, trade type, and quantity of shares to be traded as the parameter. It returns a POST request to the order server with the stock data.
 
-A short README file on how to run your code. Include build/make files if you created any, otherwise
-the README instructions on running the code should provide details on how to do so.
+If the request it sent returns a status code of 200, it generates the order number, write the order in the order database, and notifies other order nodes about the newly created order. It then returns a JSON response containing the order number.
 
-Submit the following additional documents inside the docs directory. 1) A Brief design document (1
-to 2 pages) that explains your design choices (include citations, if you used Internet
-sources), 2) An Output file (1 to 2 pages), showing sample output or screenshots to indicate that your
-program works, and 3) An Evaluation doc (2 to 3 pages), for part 4 showing plots and making
-observations.
+If the request it sent returns a status code of 404, it sets the order number to -1 and returns a JSON object with error message and a status code 404.
 
+If the request it sent returns other status code, it returns the error message string containing the status code.
+
+
+**@order_server.route('/sync', methods=['POST'])** synchronizes order information with other order nodes by receiving data from other nodes and updating the order information in the database.
+
+The request data is converted into a dictionary. The order information is stored in the order database. If the order was successful, it increases the ID stored in memory by one to ensure consistency with the leader. After that it writes the order information to the order log file.
+
+The function returns an empty string as it does not need to send any response back to the requesting node.
+
+
+**@order_server.route('/ping', methods=['GET'])** is used to ensure that the order server is alive and responses to the requests.
+
+
+
+
+### **CLIENT**
+Client sends HTTP requests to the front-end server for query and trade action. It offers various operation mode.
+
+**Client()** simulates the primary functionality query and trade. A query request is sent to the server to retrieve information about a random stock among the list of 10 stocks. The response contains the name of the stock and its current quantity.
+
+It uses the `requests` library to send HTTP requests to the front-end server, and it stores the URLs for the stocks and order in the `stocks_url` and `order_url` variables. The `order_type` list contains two string values: "buy" and "sell".
+
+If the quantity is greater than 0 which means the stock is available for trade, client() randomly decides whether to send an order request to the server with a probability `p`. If the decision is to make an order, the function will send an order request to the order server for either buy or sell(which is also chosen randomly) with a random quantity of stocks(quantity number between 1 to 10).
+
+If the order request is successful, for example, the returning message contains an HTTP status code of 200, the order number and the dictionary containing the order information will be appended to the list of successful orders. At the same time, the running time of the query and order requests will be printed out, too.
+
+
+**query_stock()** is for testing stock query service. It allows the users input a stock name and how many times they want to query the stock. With the stock name and the number of stocks, the function sends HTTP GET requests to the server to request stock information. It prints the server's response and running time at the end.  
+
+
+**query_order()** supports the user to query the order with the order number and a specified number of times. 
+
+
+**trade()** allows the user to make a trade by taking inputs for the stock name, trade options of Buy or Sell, and quantity. It then sends a POST request to the front-end server with all the information. The function also allows the user to make repeating same trade by using the `num` parameter. At the end, it prints the response received from the server and the total running time of the function.
+
+
+
+**check_consistency()** checks the consistency of successful orders made by the `client()` function. If a successful order is made, it send a GET request to the order server to find the order details. If it matches the local order information in the `success_order` list, the function prints "order info match with local!". Otherwise it prints "not match with local".
